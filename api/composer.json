@@ -1,0 +1,14 @@
+{
+    "name": "bionicpro/api",
+    "type": "project",
+    "require": {
+        "slim/slim": "^4.14",
+        "slim/psr7": "^1.7",
+        "fakerphp/faker": "^1.24"
+    } ,
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

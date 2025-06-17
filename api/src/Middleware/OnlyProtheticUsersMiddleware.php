@@ -1,10 +1,13 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Http\Message\ResponseInterface;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class OnlyProtheticUsersMiddleware
 {
@@ -36,12 +39,6 @@ class OnlyProtheticUsersMiddleware
 
             $decoded = JWT::decode($jwt, new Key($publicKey, 'RS256'));
 
-            // Проверка аудитории
-            if (!in_array($this->clientId, (array)$decoded->aud)) {
-                throw new \Exception('Invalid token audience', 403);
-            }
-
-            // Проверка роли
             $hasRole = $this->checkRole($decoded, $this->requiredRole);
 
             if (!$hasRole) {
@@ -54,21 +51,17 @@ class OnlyProtheticUsersMiddleware
             return $handler->handle($request);
         }
         catch (\Exception $e) {
-            throw new \Exception('Token validation failed: ' . $e->getMessage(), 401);
+            $response = new \Slim\Psr7\Response();
+        
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(401);
         }
     }
 
 
     private function checkRole(object $decoded, string $requiredRole): bool
     {
-        // Проверка ролей клиента
-        if (isset($decoded->resource_access->{$this->clientId}->roles)) {
-            if (in_array($requiredRole, $decoded->resource_access->{$this->clientId}->roles)) {
-                return true;
-            }
-        }
-
-        // Проверка realm ролей
         if (isset($decoded->realm_access->roles)) {
             if (in_array($requiredRole, $decoded->realm_access->roles)) {
                 return true;

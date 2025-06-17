@@ -1,5 +1,5 @@
 
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 WORKDIR /var/www/html
 
@@ -9,8 +9,12 @@ RUN apt-get update && apt-get install -y \
     zip \
     && docker-php-ext-install zip
 
+    # Установка Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+
 # Копируем исходный код
-COPY public/ /var/www/html/
+COPY . /var/www/html/
 
 # Устанавливаем права (если нужно)
 RUN chown -R www-data:www-data /var/www/html

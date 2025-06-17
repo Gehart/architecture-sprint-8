@@ -29,6 +29,7 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak_db
+
   frontend:
     build:
       context: ./frontend
@@ -40,19 +41,24 @@ services:
       REACT_APP_KEYCLOAK_URL: http://localhost:8080
       REACT_APP_KEYCLOAK_REALM: reports-realm
       REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+
   php:
     build:
       context: ./api
-      dockerfile: docker/php/Dockerfile
+      dockerfile: Dockerfile
     volumes:
-      - ./api/public:/var/www/html
+      - ./api:/var/www/html
+    environment:
+      API_KEYCLOAK_URL: http://keycloak:8080/realms/reports-realm
+      API_KEYCLOAK_REALM: reports-realm
+      APP_ENV: DEV
 
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:80"
+      - "8000:80"
     volumes:
-      - ./api/public:/var/www/html
+      - ./api:/var/www/html
       - ./api/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - php

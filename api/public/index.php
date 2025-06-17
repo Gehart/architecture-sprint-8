@@ -1,8 +1,10 @@
 <?php
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Factory\AppFactory;
+use App\Middleware\OnlyProtheticUsersMiddleware;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -11,6 +13,7 @@ $app = AppFactory::create();
 
 $isDevMode = getenv('APP_ENV') === 'dev';
 $app->addErrorMiddleware($isDevMode ?: false, false, false);
+// $app->addErrorMiddleware(true, false, false);
 
 $beforeMiddleware = function (Request $request, RequestHandler $handler) use ($app) {
     // Example: Check for a specific header before proceeding
@@ -26,6 +29,12 @@ $beforeMiddleware = function (Request $request, RequestHandler $handler) use ($a
     // Proceed with the next middleware
     return $handler->handle($request);
 };
+
+$onlyProtheticUsersMiddleware = new OnlyProtheticUsersMiddleware(
+    getenv('API_KEYCLOAK_URL'),
+    'reports-api',
+    'prothetic_user'
+);
 
 // Единственный роут - GET /api/hello
 $app->get('/reports', function (Request $request, Response $response, array $args) {
@@ -46,7 +55,7 @@ $app->get('/reports', function (Request $request, Response $response, array $arg
         ->withHeader('Content-Type', 'application/json')
         ->withStatus(200);
 })
-    ->add(new App\Middleware\OnlyProtheticUsersMiddleware());
+    ->add($onlyProtheticUsersMiddleware);
     // ->add($beforeMiddleware);
 
 

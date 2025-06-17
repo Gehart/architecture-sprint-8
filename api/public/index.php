@@ -9,7 +9,8 @@ require __DIR__ . '/../vendor/autoload.php';
 // Инициализация приложения
 $app = AppFactory::create();
 
-$app->addErrorMiddleware(true, false, false); 
+$isDevMode = getenv('APP_ENV') === 'dev';
+$app->addErrorMiddleware($isDevMode ?: false, false, false);
 
 $beforeMiddleware = function (Request $request, RequestHandler $handler) use ($app) {
     // Example: Check for a specific header before proceeding
@@ -40,6 +41,7 @@ $app->get('/reports', function (Request $request, Response $response, array $arg
     ]];
     
     $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
+
     return $response
         ->withHeader('Content-Type', 'application/json')
         ->withStatus(200);
@@ -55,5 +57,4 @@ $app->get('/reports', function (Request $request, Response $response, array $arg
 //         ->withStatus(404);
 // });
 
-// Запуск приложения
 $app->run();

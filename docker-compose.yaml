@@ -40,3 +40,19 @@ services:
       REACT_APP_KEYCLOAK_URL: http://localhost:8080
       REACT_APP_KEYCLOAK_REALM: reports-realm
       REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+  php:
+    build:
+      context: ./api
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - ./api/public:/var/www/html
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api/public:/var/www/html
+      - ./api/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php

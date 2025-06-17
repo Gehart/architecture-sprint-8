@@ -16,5 +16,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Копируем исходный код
 COPY . /var/www/html/
 
+RUN composer install
+
 # Устанавливаем права (если нужно)
 RUN chown -R www-data:www-data /var/www/html

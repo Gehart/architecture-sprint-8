@@ -13,22 +13,21 @@ class OnlyProtheticUsersMiddleware
 {
     public function __construct(
         private string $keycloakRealmUrl,
-        private string $clientId,
         private string $requiredRole
     ) {
     }
 
     public function __invoke(Request $request, RequestHandler $handler): ResponseInterface
     {
-        $authHeader = $request->getHeaderLine('Authorization');
-
-        if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-            throw new \Exception('Invalid Authorization header format', 401);
-        }
-
-        $jwt = $matches[1];
-
         try {
+            $authHeader = $request->getHeaderLine('Authorization');
+
+            if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                throw new \Exception('Invalid Authorization header format', 401);
+            }
+
+            $jwt = $matches[1];
+
             $keycloakCerts = json_decode(
                 file_get_contents($this->keycloakRealmUrl . '/protocol/openid-connect/certs'),
                 true
@@ -45,20 +44,16 @@ class OnlyProtheticUsersMiddleware
                 throw new \Exception('Insufficient permissions', 403);
             }
 
-            // Добавляем декодированный токен в атрибуты запроса
-            $request = $request->withAttribute('token', $decoded);
-
             return $handler->handle($request);
         }
-        catch (\Exception $e) {
+        catch (\Throwable $e) {
             $response = new \Slim\Psr7\Response();
         
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(401);
+              return $response
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withStatus(401);
         }
     }
-
 
     private function checkRole(object $decoded, string $requiredRole): bool
     {

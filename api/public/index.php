@@ -8,37 +8,17 @@ use App\Middleware\OnlyProtheticUsersMiddleware;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Инициализация приложения
 $app = AppFactory::create();
 
 $isDevMode = getenv('APP_ENV') === 'dev';
 $app->addErrorMiddleware($isDevMode ?: false, false, false);
-// $app->addErrorMiddleware(true, false, false);
-
-$beforeMiddleware = function (Request $request, RequestHandler $handler) use ($app) {
-    // Example: Check for a specific header before proceeding
-    $auth = $request->getHeaderLine('Authorization');
-    if (!$auth) {
-        // Short-circuit and return a response immediately
-        $response = $app->getResponseFactory()->createResponse();
-        $response->getBody()->write('Unauthorized');
-        
-        return $response->withStatus(401);
-    }
-
-    // Proceed with the next middleware
-    return $handler->handle($request);
-};
 
 $onlyProtheticUsersMiddleware = new OnlyProtheticUsersMiddleware(
     getenv('API_KEYCLOAK_URL'),
-    'reports-api',
     'prothetic_user'
 );
 
-// Единственный роут - GET /api/hello
 $app->get('/reports', function (Request $request, Response $response, array $args) {
-
     $faker = Faker\Factory::create();
 
     $data = [[
@@ -56,14 +36,5 @@ $app->get('/reports', function (Request $request, Response $response, array $arg
         ->withStatus(200);
 })
     ->add($onlyProtheticUsersMiddleware);
-    // ->add($beforeMiddleware);
-
-
-// Обработка 404 ошибки для всех остальных запросов
-// $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], '/{routes:.+}', function ($request, $response) {
-//     return $response
-//         ->withHeader('Content-Type', 'application/json')
-//         ->withStatus(404);
-// });
 
 $app->run();

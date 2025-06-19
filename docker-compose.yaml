@@ -46,6 +46,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./api:/var/www/html
+      - vendor:/var/www/html/vendor 
     environment:
       API_KEYCLOAK_URL: http://keycloak:8080/realms/reports-realm
       API_KEYCLOAK_REALM: reports-realm
@@ -60,3 +61,6 @@ services:
       - ./api/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - php
+
+volumes:
+  vendor:
